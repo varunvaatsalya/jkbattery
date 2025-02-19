@@ -28,14 +28,15 @@ function Users() {
     });
 
     if (response.success) {
-      setMessage(`User saved with ID: ${response.id}`);
+      setMessage(`User saved with ID: ${response.user.id}`);
       fetchUsers();
     } else {
-      setMessage(`Error: ${response.error}`);
+      setMessage(`Error: ${response.message}`);
     }
+    setMessage(JSON.stringify(response));
     setTimeout(() => {
-      reset();
-    }, 2500);
+      // reset();
+    }, 5000);
   };
 
   const fetchUsers = async () => {
@@ -99,7 +100,7 @@ function Users() {
                 type="submit"
                 className="bg-gray-800 cursor-pointer px-2 rounded-lg text-white"
               >
-                {id?"Update":"Add User"}
+                {id ? "Update" : "Add User"}
               </button>
             </div>
           </form>
@@ -132,9 +133,10 @@ function Users() {
       )}
 
       <div className="mb-1 w-full md:w-4/5 lg:w-3/5 text-center font-semibold text-white bg-gray-800 rounded-xl py-1 px-2 flex items-center">
-        <div className="w-[6%]">Sr.</div>
-        <div className="w-[47%] text-start">Username</div>
-        <div className="w-[47%] text-start">Role</div>
+        <div className="w-[5%]">Sr.</div>
+        <div className="w-[25%] text-start">#UID</div>
+        <div className="w-[45%] text-start">Username</div>
+        <div className="w-[20%] text-start">Role</div>
       </div>
       <ul className="flex-1 w-full md:w-4/5 lg:w-3/5 bg-gray-200 rounded-xl p-2 space-y-1 overflow-y-auto scrollbar-hide">
         {users.map((user, index) => (
@@ -143,13 +145,17 @@ function Users() {
             className="flex items-center font-semibold bg-gray-300 rounded-lg py-1 px-2 text-sm"
           >
             <div className="w-[5%]">{index + 1 + "."}</div>
+            <div className="w-[25%]">{user.uid}</div>
             <div className="w-[45%]">{user.username}</div>
-            <div className="w-[45%]">{user.role}</div>
-            <div className="w-[5%] px-2 hover:text-gray-700 cursor-pointer" onClick={()=>{
-              setId(user.id);
-              setUserName(user.username);
-              setRole(user.role);
-            }}>
+            <div className="w-[20%]">{user.role}</div>
+            <div
+              className="w-[5%] px-2 hover:text-gray-700 cursor-pointer"
+              onClick={() => {
+                setId(user.id);
+                setUserName(user.username);
+                setRole(user.role);
+              }}
+            >
               <FaPen />
             </div>
           </li>

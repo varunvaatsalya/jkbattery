@@ -87,6 +87,7 @@ app.whenReady().then(() => {
     },
   });
   Menu.setApplicationMenu(null);
+  // mainWindow.webContents.openDevTools();
   // mainWindow.loadFile(path.join(__dirname, "./app/build/index.html"));
   mainWindow.loadURL("http://localhost:3000/");
 });

@@ -1,3 +1,5 @@
+const { DEFAULT_ADMIN } = require("../Credentials");
+const { generateUID } = require("../utils/dateFormat");
 const db = require("./db");
 const bcrypt = require("bcryptjs");
 
@@ -5,17 +7,26 @@ const userNameChk = /^[a-z]{3,20}$/;
 const passwordChk = /^[a-zA-Z0-9]{6,30}$/;
 
 // Create Users Table
-db.run(`
+db.run(
+  `
     CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    uid
+    uid TEXT UNIQUE,
     username TEXT UNIQUE,
     password TEXT,
     role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user'))
   )
-`);
+`,
+  (err) => {
+    if (err) {
+      console.error("Table creation error:", err.message);
+    } else {
+      console.log("Table created successfully");
+    }
+  }
+);
 
-const validateInputs = (username, password) => {
+const validateEmail = (username) => {
   if (!userNameChk.test(username)) {
     return {
       valid: false,
@@ -23,6 +34,10 @@ const validateInputs = (username, password) => {
         "Invalid username. It must be 3-20 characters long and contain only lowercase letters.",
     };
   }
+  return { valid: true };
+};
+
+const validatePassword = (password) => {
   if (!passwordChk.test(password)) {
     return {
       valid: false,
@@ -34,38 +49,72 @@ const validateInputs = (username, password) => {
 };
 
 const saveUser = async ({ username, password, role = "user" }) => {
-  const validation = validateInputs(username, password);
-  if (!validation.valid) {
-    return new Error(validation.message);
+  const validationEmail = validateEmail(username);
+  const validationPassword = validatePassword(password);
+
+  if (!validationEmail.valid) {
+    return { success: false, message: validationEmail.message };
   }
-  const hash = await bcrypt.hash(password, 10);
+  if (!validationPassword.valid) {
+    return { success: false, message: validationPassword.message };
+  }
+  if (username === DEFAULT_ADMIN.username) {
+    return { success: false, message: "Username already exist." };
+  }
+
+  try {
+    const hash = await bcrypt.hash(password, 10);
+
+    const userId = await new Promise((resolve, reject) => {
+      let prefix = role === "admin" ? "AD" : "UR";
+      let uid = prefix + generateUID();
+      db.run(
+        "INSERT INTO users (uid, username, password, role) VALUES (?, ?, ?, ?)",
+        [uid, username, hash, role],
+        function (err) {
+          console.log(err);
+          if (err) {
+            reject(err);
+          } else resolve(this.lastID);
+        }
+      );
+    });
+
+    return {
+      success: true,
+      user: { id: userId, username, role }, // ✅ id ke andar success:false wala object nahi jayega
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+const getUsers = () => {
   return new Promise((resolve, reject) => {
-    db.run(
-      "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-      [username, hash, role],
-      function (err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
+    db.all(
+      "SELECT uid, username, role FROM users ORDER BY id DESC",
+      [],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          rows.push(DEFAULT_ADMIN);
+          resolve(rows);
+        }
       }
     );
   });
 };
 
-const getUsers = () => {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT id, username, role FROM users ORDER BY id DESC", [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-const updateUser = async ( { id,username, password, role }) => {
+const updateUser = async ({ id, username, password, role }) => {
   const validation = validateInputs(username, password);
   if (!validation.valid) {
     return new Error(validation.message);
   }
-  
+
   const hash = await bcrypt.hash(password, 10);
   return new Promise((resolve, reject) => {
     db.run(
@@ -73,7 +122,11 @@ const updateUser = async ( { id,username, password, role }) => {
       [username, hash, role, id],
       function (err) {
         if (err) reject(err);
-        else resolve({ message: "User updated successfully", changes: this.changes });
+        else
+          resolve({
+            message: "User updated successfully",
+            changes: this.changes,
+          });
       }
     );
   });

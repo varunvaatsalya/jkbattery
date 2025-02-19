@@ -6,7 +6,7 @@ export default function Navbar({ route }) {
   return (
     <header className="w-full bg-gray-300 text-gray-900 text-white p-2 sm:px-6 lg:px-8">
       <Link
-        to={"./"}
+        to={"../"}
         className="container mx-auto flex items-center lg:text-xl font-semibold text-gray-900 hover:text-gray-800 "
       >
         <IoIosArrowBack className="mx-2" />

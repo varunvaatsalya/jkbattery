@@ -2,17 +2,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Store = require("electron-store");
 const db = require("./db");
+const { DEFAULT_ADMIN, SECRET_KEY } = require("../Credentials");
 
 const store = new Store();
 
-const SECRET_KEY = "JK-Battery";
-
-const DEFAULT_ADMIN = {
-  id: 0,
-  username: "admin",
-  password: "admin123",
-  role: "admin",
-};
 const userNameChk = /^[a-z]{3,20}$/;
 const passwordChk = /^[a-zA-Z0-9]{6,30}$/;
 
@@ -34,7 +27,7 @@ async function loginUser(username, password) {
           const validPassword = await bcrypt.compare(password, user.password);
           if (!validPassword) return reject(new Error("Invalid password"));
 
-          let data = { id: user.id, username: user.username, role: user.role };
+          let data = { id: user.id, uid: user.uid, username: user.username, role: user.role };
 
           // Generate JWT token
           const token = jwt.sign(data, SECRET_KEY, { expiresIn: "2d" });
@@ -48,6 +41,7 @@ async function loginUser(username, password) {
         ) {
           let data = {
             id: DEFAULT_ADMIN.id,
+            uid: DEFAULT_ADMIN.uid,
             username: DEFAULT_ADMIN.username,
             role: DEFAULT_ADMIN.role,
           };
