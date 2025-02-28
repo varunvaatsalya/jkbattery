@@ -67,19 +67,21 @@
 // });
 
 
-const { app, BrowserWindow, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
 const path = require("path");
 const { handlers } = require("./handlers.js");
 const { loginUser, isUserLoggedIn, logoutUser } = require("./db/auth.js");
 
 let mainWindow;
 
+
 app.whenReady().then(() => {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 750,
-    minWidth: 600,
-    minHeight: 450,
+    width,
+    height,
+    minWidth: 1000,
+    minHeight: 700,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

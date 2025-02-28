@@ -72,7 +72,6 @@ const saveUser = async ({ username, password, role = "user" }) => {
         "INSERT INTO users (uid, username, password, role) VALUES (?, ?, ?, ?)",
         [uid, username, hash, role],
         function (err) {
-          console.log(err);
           if (err) {
             reject(err);
           } else resolve(this.lastID);
@@ -82,7 +81,7 @@ const saveUser = async ({ username, password, role = "user" }) => {
 
     return {
       success: true,
-      user: { id: userId, username, role }, // ✅ id ke andar success:false wala object nahi jayega
+      user: { id: userId, username, role },
     };
   } catch (err) {
     return {
@@ -95,14 +94,14 @@ const saveUser = async ({ username, password, role = "user" }) => {
 const getUsers = () => {
   return new Promise((resolve, reject) => {
     db.all(
-      "SELECT uid, username, role FROM users ORDER BY id DESC",
+      "SELECT id, uid, username, role FROM users ORDER BY id DESC",
       [],
       (err, rows) => {
         if (err) {
-          reject(err);
+          reject({ message: err, success: false });
         } else {
           rows.push(DEFAULT_ADMIN);
-          resolve(rows);
+          resolve({ data: rows, success: true });
         }
       }
     );
@@ -110,25 +109,40 @@ const getUsers = () => {
 };
 
 const updateUser = async ({ id, username, password, role }) => {
-  const validation = validateInputs(username, password);
-  if (!validation.valid) {
-    return new Error(validation.message);
+  const validationEmail = validateEmail(username);
+
+  if (!validationEmail.valid) {
+    return { success: false, message: validationEmail.message };
   }
 
-  const hash = await bcrypt.hash(password, 10);
+  if (password) {
+    const validationPassword = validatePassword(password);
+    if (!validationPassword.valid) {
+      return { success: false, message: validationPassword.message };
+    }
+  }
+
+  let hash = null;
+  if (password) {
+    hash = await bcrypt.hash(password, 10);
+  }
+
   return new Promise((resolve, reject) => {
-    db.run(
-      "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?",
-      [username, hash, role, id],
-      function (err) {
-        if (err) reject(err);
-        else
-          resolve({
-            message: "User updated successfully",
-            changes: this.changes,
-          });
+    const query = password
+      ? "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?"
+      : "UPDATE users SET username = ?, role = ? WHERE id = ?";
+    const params = password ? [username, hash, role, id] : [username, role, id];
+
+    db.run(query, params, function (err) {
+      if (err) {
+        reject({ success: false, message: err });
+      } else {
+        resolve({
+          message: "User updated successfully",
+          success: true,
+        });
       }
-    );
+    });
   });
 };
 

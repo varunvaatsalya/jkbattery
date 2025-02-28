@@ -1,19 +1,43 @@
 import React from "react";
 import Navbar from "../components/Navbar";
-import { Link, Outlet, useNavigate } from "react-router-dom";
-import { IoLogOut } from "react-icons/io5";
-import { FaCarBattery, FaUsersGear } from "react-icons/fa6";
+import { Link, useNavigate } from "react-router-dom";
+import { IoLogOut, IoNewspaper } from "react-icons/io5";
+import { FaCarBattery, FaPeopleLine, FaUsersGear } from "react-icons/fa6";
+import { GrUserWorker } from "react-icons/gr";
 
 function AdminDashboard() {
   const navigate = useNavigate();
 
   const Works = [
     {
+      name: "Complaint",
+      description: "You can view & create customer complaints here",
+      icon: <IoNewspaper size={50} />,
+      link: "/adminDashboard/complaints",
+      color: "bg-emerald-700",
+    },
+    {
+      name: "Customers",
+      description:
+        "You can view, create & modify all the customers and there previous order here",
+      icon: <FaPeopleLine size={50} />,
+      link: "/adminDashboard/customers",
+      color: "bg-rose-500",
+    },
+    {
       name: "Products",
-      description: "You can view, create & modify all the products here",
+      description:
+        "You can view, create & modify all the product and there meta data here",
       icon: <FaCarBattery size={50} />,
       link: "/adminDashboard/products",
       color: "bg-blue-700",
+    },
+    {
+      name: "Employees",
+      description: "You can view & create all the employees here",
+      icon: <GrUserWorker size={50} />,
+      link: "/adminDashboard/employees",
+      color: "bg-violet-700",
     },
     {
       name: "Users",
@@ -48,7 +72,7 @@ function AdminDashboard() {
             // router.push("/login");
             navigate("/");
           }}
-          className="w-full p-3 h-60 md:w-2/5 lg:w-1/5 bg-red-700 text-white rounded-xl flex flex-col justify-center items-center space-y-1"
+          className="w-full p-3 h-60 md:w-2/5 lg:w-1/5 bg-red-700 hover:bg-red-800 cursor-pointer text-white rounded-xl flex flex-col justify-center items-center space-y-1"
         >
           <IoLogOut size={60} />
           <div className="font-bold text-xl">Logout</div>

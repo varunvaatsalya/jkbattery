@@ -3,35 +3,35 @@ import Navbar from "../components/Navbar";
 import { IoCloseCircle, IoPersonAdd } from "react-icons/io5";
 import { FaPen } from "react-icons/fa6";
 
-function Users() {
+function Customers() {
   const [id, setId] = useState("");
   const [isOpenForm, setIsOpenForm] = useState(false);
-  const [username, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
-  const [users, setUsers] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   function reset() {
     setMessage("");
-    setUserName("");
-    setPassword("");
+    setName("");
+    setContact("");
+    setAddress("");
     setId("");
-    setRole("");
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let data = { username, password, role };
+    let data = { name, contact, address };
     if (id) data.id = id;
     const response = await window.electron.invoke("database-operation", {
-      action: id ? "update-user" : "save-user",
+      action: id ? "update-customer" : "save-customer",
       data,
     });
 
     if (response.success) {
       setMessage(`User Saved`);
-      fetchUsers();
+      fetchCustomers();
     } else {
       setMessage(`Error: ${response.message}`);
     }
@@ -40,27 +40,27 @@ function Users() {
     }, 2500);
   };
 
-  const fetchUsers = async () => {
+  const fetchCustomers = async () => {
     const response = await window.electron.invoke("database-operation", {
-      action: "get-users",
+      action: "get-customers",
     });
 
     if (response.success) {
-      setUsers(response.data);
+      setCustomers(response.data);
     } else {
-      setMessage(`Error: ${response.error}`);
+      setMessage(`${response.error}`);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchCustomers();
   }, []);
 
   return (
     <div className="w-full flex flex-col items-center h-screen">
-      <Navbar route={["Users"]} />
+      <Navbar route={["Customers"]} />
       <div className="my-1 p-1 w-4/5 md:w-3/4 lg:w-1/2 rounded-xl bg-gray-300 text-gray-900 font-semibold text-center">
-        List of all Users/Admins
+        List of all Customers
       </div>
       <div className="flex flex-col md:flex-row jusitfy-center items-center gap-3 mb-1">
         {isOpenForm && (
@@ -68,40 +68,34 @@ function Users() {
             <div className="flex gap-2">
               <input
                 type="text"
-                value={username}
-                onChange={(e) => setUserName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
                 required
                 className="bg-gray-50 p-1 rounded-lg font-semibold"
               />
               <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                type="number"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="Contact"
                 required={!id}
                 className="bg-gray-50 p-1 rounded-lg font-semibold"
               />
             </div>
-            <div className="flex gap-2 mt-2">
-              <select
-                name="role"
-                required
-                value={role}
-                onChange={(e) => {
-                  setRole(e.target.value);
-                }}
+            <div className="flex justify-center gap-2 mt-2">
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Address"
                 className="bg-gray-50 p-1 rounded-lg font-semibold"
-              >
-                <option value="">-- Select Role --</option>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
+              />
               <button
                 type="submit"
-                className="bg-gray-800 cursor-pointer px-2 rounded-lg text-white"
+                className="bg-gray-800 cursor-pointer px-2 py-1 rounded-lg text-white"
               >
-                {id ? "Update" : "Add User"}
+                {id ? "Update" : "Add Customer"}
               </button>
             </div>
           </form>
@@ -135,34 +129,30 @@ function Users() {
 
       <div className="mb-1 w-full md:w-4/5 lg:w-3/5 text-center font-semibold text-white bg-gray-800 rounded-xl py-1 px-2 flex items-center">
         <div className="w-[5%]">Sr.</div>
-        <div className="w-[25%] text-start">#UID</div>
-        <div className="w-[45%] text-start">Username</div>
-        <div className="w-[20%] text-start">Role</div>
+        <div className="w-[15%] text-start">#CID</div>
+        <div className="w-[25%] text-start">Name</div>
+        <div className="w-[15%] text-start">Contact</div>
+        <div className="w-[35%] text-start">Address</div>
       </div>
       <ul className="flex-1 w-full md:w-4/5 lg:w-3/5 bg-gray-200 rounded-xl p-2 space-y-1 overflow-y-auto scrollbar-hide">
-        {users.map((user, index) => (
+        {customers.map((customer, index) => (
           <li
-            key={user.id}
+            key={customer.id}
             className="flex items-center font-semibold bg-gray-300 rounded-lg py-1 px-2 text-sm"
           >
             <div className="w-[5%] text-rose-600">{index + 1 + "."}</div>
-            <div className="w-[25%]">{user.uid}</div>
-            <div className="w-[45%]">{user.username}</div>
-            <div
-              className={
-                "w-[20%] " +
-                (user.role === "admin" ? " text-rose-600" : "text-gray-900")
-              }
-            >
-              {user.role}
-            </div>
-            {user.id !== 0 && (
+            <div className="w-[15%]">{customer.eid}</div>
+            <div className="w-[25%]">{customer.name}</div>
+            <div className={"w-[15%] text-rose-600"}>{customer.contact}</div>
+            <div className="w-[35%] line-clamp-1" title={customer.address}>{customer.address}</div>
+            {customer.id !== 0 && (
               <div
                 className="w-[5%] px-2 text-rose-600 hover:text-rose-800 cursor-pointer"
                 onClick={() => {
-                  setId(user.id);
-                  setUserName(user.username);
-                  setRole(user.role);
+                  setId(customer.id);
+                  setName(customer.name);
+                  setContact(customer.contact);
+                  setAddress(customer.address);
                   setIsOpenForm(true);
                 }}
               >
@@ -176,4 +166,4 @@ function Users() {
   );
 }
 
-export default Users;
+export default Customers;
