@@ -1,6 +1,6 @@
 const { DEFAULT_ADMIN } = require("../Credentials");
 const { generateUID } = require("../utils/dateFormat");
-const db = require("./db");
+const { db } = require("./db");
 const bcrypt = require("bcryptjs");
 
 const userNameChk = /^[a-z]{3,20}$/;
@@ -21,7 +21,7 @@ db.run(
     if (err) {
       console.error("Table creation error:", err.message);
     } else {
-      console.log("Table created successfully");
+      console.log("User Table created successfully");
     }
   }
 );

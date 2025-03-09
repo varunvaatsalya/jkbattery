@@ -66,14 +66,12 @@
 //   }
 // });
 
-
 const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
 const path = require("path");
 const { handlers } = require("./handlers.js");
 const { loginUser, isUserLoggedIn, logoutUser } = require("./db/auth.js");
 
 let mainWindow;
-
 
 app.whenReady().then(() => {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -89,7 +87,7 @@ app.whenReady().then(() => {
     },
   });
   Menu.setApplicationMenu(null);
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
   // mainWindow.loadFile(path.join(__dirname, "./app/build/index.html"));
   mainWindow.loadURL("http://localhost:3000/");
 });
@@ -98,6 +96,18 @@ ipcMain.handle("database-operation", async (event, { action, data }) => {
   try {
     if (handlers[action]) {
       return await handlers[action](data);
+    } else {
+      return { success: false, error: "Invalid action" };
+    }
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("database-file-operation", async (event, action, ...data) => {
+  try {
+    if (handlers[action]) {
+      return await handlers[action](...data);
     } else {
       return { success: false, error: "Invalid action" };
     }

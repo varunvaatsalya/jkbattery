@@ -1,13 +1,14 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 
 export default function Navbar({ route }) {
+  const navigate = useNavigate();
   return (
-    <header className="w-full bg-gray-300 text-gray-900 text-white p-2 sm:px-6 lg:px-8">
-      <Link
-        to={"../"}
-        className="container mx-auto flex items-center font-semibold text-gray-900 hover:text-gray-800 "
+    <header className="w-full bg-gray-200 text-gray-900 text-white p-2 sm:px-6 lg:px-8">
+      <div
+        onClick={() => navigate(-1)}
+        className="container mx-auto cursor-pointer flex items-center font-semibold text-gray-900 hover:text-gray-800 "
       >
         <IoIosArrowBack className="mx-2 text-rose-600" />
         <div>Dashboard</div>
@@ -19,7 +20,7 @@ export default function Navbar({ route }) {
             </div>
           );
         })}
-      </Link>
+      </div>
     </header>
   );
 }

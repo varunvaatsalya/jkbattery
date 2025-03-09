@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { IoLogOut, IoNewspaper } from "react-icons/io5";
 import { FaCarBattery, FaPeopleLine, FaUsersGear } from "react-icons/fa6";
 import { GrUserWorker } from "react-icons/gr";
+import { SiSimplelogin } from "react-icons/si";
+import { BsPersonFillUp } from "react-icons/bs";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -31,6 +33,13 @@ function AdminDashboard() {
       icon: <FaCarBattery size={50} />,
       link: "/adminDashboard/products",
       color: "bg-blue-700",
+    },{
+      name: "Dealers",
+      description:
+        "You can view, create & modify all the dealers and there previous order here",
+      icon: <BsPersonFillUp size={50} />,
+      link: "/adminDashboard/dealers",
+      color: "bg-orange-900",
     },
     {
       name: "Employees",
@@ -45,6 +54,13 @@ function AdminDashboard() {
       icon: <FaUsersGear size={50} />,
       link: "/adminDashboard/users",
       color: "bg-yellow-700",
+    },
+    {
+      name: "Logins",
+      description: "You can view all the login details here",
+      icon: <SiSimplelogin size={50} />,
+      link: "/adminDashboard/logins",
+      color: "bg-teal-700",
     },
   ];
 

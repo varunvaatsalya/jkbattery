@@ -12,6 +12,9 @@ import Company from "./pages/Company";
 import Employees from "./pages/Employees";
 import Complaints from "./pages/Complaints";
 import Customers from "./pages/Customers";
+import Dealers from "./pages/Dealers";
+import LoginsHistory from "./pages/LoginsHistory";
+import MessageBox from "./components/MessageBox";
 
 const ProtectedRoute = ({ element, isAllowed }) => {
   return isAllowed ? element : <Navigate to="/" replace />;
@@ -22,6 +25,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="max-h-screen min-h-screen bg-gray-100">
+        <MessageBox />
         <Routes>
           <Route path="/" element={<Login />} />
           <Route
@@ -41,15 +45,16 @@ function App() {
                 isAllowed={user && user.username === "admin"}
               />
             }
-          /><Route
-          path="/adminDashboard/employees"
-          element={
-            <ProtectedRoute
-              element={<Employees />}
-              isAllowed={user && user.username === "admin"}
-            />
-          }
-        />
+          />
+          <Route
+            path="/adminDashboard/employees"
+            element={
+              <ProtectedRoute
+                element={<Employees />}
+                isAllowed={user && user.username === "admin"}
+              />
+            }
+          />
           <Route
             path="/adminDashboard/products"
             element={
@@ -60,10 +65,10 @@ function App() {
             }
           />
           <Route
-            path="/adminDashboard/products"
+            path="/adminDashboard/dealers"
             element={
               <ProtectedRoute
-                element={<Products />}
+                element={<Dealers />}
                 isAllowed={user && user.username === "admin"}
               />
             }
@@ -100,6 +105,15 @@ function App() {
             element={
               <ProtectedRoute
                 element={<Complaints />}
+                isAllowed={user && user.username === "admin"}
+              />
+            }
+          />
+          <Route
+            path="/adminDashboard/logins"
+            element={
+              <ProtectedRoute
+                element={<LoginsHistory />}
                 isAllowed={user && user.username === "admin"}
               />
             }

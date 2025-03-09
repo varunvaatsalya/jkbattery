@@ -4,9 +4,11 @@ const {
   getCompanies,
   getCompaniesWithProducts,
 } = require("./db/company");
+const { saveComplaint, fetchComplaints, updateComplaint } = require("./db/complaint.js");
 const { saveCustomer, getCustomers, updateCustomer, findCustomers } = require("./db/customers");
-const { saveDealer, getDealers, updateDealer } = require("./db/dealers.js");
+const { saveDealer, getDealers, updateDealer, findDealers } = require("./db/dealers.js");
 const { saveEmployee, getEmployees, updateEmployee } = require("./db/employee");
+const { saveLogin, getAllLogins } = require("./db/loginsHistory.js");
 const { saveProduct, getProducts, updateProduct } = require("./db/products");
 const { saveType, getTypes, deleteType } = require("./db/types");
 const { getUsers, saveUser, updateUser } = require("./db/users");
@@ -36,8 +38,8 @@ const handlers = {
   "get-customers": async () => {
     return await getCustomers();
   },
-  "find-customers": async (query) => {
-    return await findCustomers(query);
+  "find-customers": async (data) => {
+    return await findCustomers(data);
   },
   "update-customer": async (data) => {
     return await updateCustomer(data);
@@ -47,6 +49,9 @@ const handlers = {
   },
   "get-dealers": async () => {
     return await getDealers();
+  },
+  "find-dealers": async (data) => {
+    return await findDealers(data);
   },
   "update-dealer": async (data) => {
     return await updateDealer(data);
@@ -80,6 +85,18 @@ const handlers = {
   },
   "update-product": async (data) => {
     return await updateProduct(data);
+  },
+  "save-complaint": async (data, buffer,extension) => {
+    return await saveComplaint(data, buffer, extension);
+  },
+  "update-complaint": async (data) => {
+    return await updateComplaint(data);
+  },
+  "get-complaints": async (data) => {
+    return await fetchComplaints(data);
+  },
+  "get-logins": async (data) => {
+    return await getAllLogins(data);
   },
 };
 

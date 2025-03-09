@@ -1,5 +1,5 @@
 const { generateUID } = require("../utils/dateFormat");
-const db = require("./db");
+const { db } = require("./db");
 
 // Create Employees Table
 db.run(
@@ -16,7 +16,7 @@ db.run(
     if (err) {
       console.error("Table creation error:", err.message);
     } else {
-      console.log("Table created successfully");
+      console.log("Customer Table created successfully");
     }
   }
 );
@@ -103,7 +103,7 @@ const getCustomers = () => {
   });
 };
 
-const findCustomers = (query) => {
+const findCustomers = ({query}) => {
   return new Promise((resolve, reject) => {
     const searchQuery = `
       SELECT * 

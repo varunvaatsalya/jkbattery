@@ -1,4 +1,4 @@
-const db = require("./db");
+const { db } = require("./db");
 
 db.run(
   `
@@ -11,7 +11,7 @@ db.run(
     if (err) {
       console.error("Table creation error:", err.message);
     } else {
-      console.log("Table created successfully");
+      console.log("Company Table created successfully");
     }
   }
 );

@@ -1,5 +1,5 @@
 const { generateUID } = require("../utils/dateFormat");
-const db = require("./db");
+const { db } = require("./db");
 
 // Create Employees Table
 db.run(
@@ -16,7 +16,7 @@ db.run(
     if (err) {
       console.error("Table creation error:", err.message);
     } else {
-      console.log("Table created successfully");
+      console.log("Dealer Table created successfully");
     }
   }
 );
@@ -58,9 +58,9 @@ const saveDealer = async ({ name, contact, address }) => {
 
   try {
     const dealerId = await new Promise((resolve, reject) => {
-      let prefix = "CR";
+      let prefix = "DL";
       let eid = prefix + generateUID();
-      let query = "INSERT INTO dealers (cid, name, contact";
+      let query = "INSERT INTO dealers (did, name, contact";
       let values = [eid, name.toUpperCase(), contact];
 
       if (address) {
@@ -97,6 +97,30 @@ const getDealers = () => {
     db.all("SELECT * FROM dealers ORDER BY id DESC", [], (err, rows) => {
       if (err) {
         reject({ message: err, success: false });
+      } else {
+        resolve({ data: rows, success: true });
+      }
+    });
+  });
+};
+
+const findDealers = ({query}) => {
+  return new Promise((resolve, reject) => {
+    const searchQuery = `
+      SELECT * 
+      FROM dealers 
+      WHERE 
+        name LIKE ? OR 
+        contact LIKE ? OR 
+        address LIKE ? 
+      ORDER BY id DESC
+    `;
+
+    const searchParam = `%${query}%`;
+
+    db.all(searchQuery, [searchParam, searchParam, searchParam], (err, rows) => {
+      if (err) {
+        reject({ message: err.message, success: false });
       } else {
         resolve({ data: rows, success: true });
       }
@@ -141,4 +165,4 @@ const updateDealer = async ({ id, name, contact, address }) => {
 };
 
 
-module.exports = { saveDealer, getDealers, updateDealer };
+module.exports = { saveDealer, getDealers,findDealers, updateDealer };

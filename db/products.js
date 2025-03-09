@@ -1,4 +1,4 @@
-const db = require("./db");
+const { db } = require("./db");
 const { generateUID } = require("../utils/dateFormat");
 
 db.run(
@@ -16,7 +16,7 @@ db.run(
     if (err) {
       console.error("Table creation error:", err.message);
     } else {
-      console.log("Table created successfully");
+      console.log("Product Table created successfully");
     }
   }
 );
@@ -81,7 +81,7 @@ const getProducts = () => {
   return new Promise((resolve, reject) => {
     db.all(
       `
-          SELECT products.id as productId, products.pid, products.model_name, products.product_type, companies.id as companyId, companies.name as companyName
+          SELECT products.id, products.pid, products.model_name, products.product_type, companies.id as companyId, companies.name as companyName
           FROM products
           LEFT JOIN companies ON products.company_id = companies.id
           ORDER BY companies.name ASC, products.id DESC

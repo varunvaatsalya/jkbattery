@@ -9,40 +9,99 @@ import {
   TbCircleNumber2Filled,
   TbCircleNumber3Filled,
   TbCircleNumber4Filled,
-  TbCircleNumber5Filled,
-  TbCircleNumber6Filled,
 } from "react-icons/tb";
+import { LuSearch } from "react-icons/lu";
+import {
+  IoIosArrowDropdown,
+  IoIosArrowDropright,
+  IoMdRemoveCircle,
+} from "react-icons/io";
+import { useAuth } from "../context/AuthContext";
 
 function NewComplaintForm({ setIsOpenModal, fetchComplaints }) {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [dealers, setDealers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedDealer, setSelectedDealer] = useState(null);
   const [message, setMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
   const [image, setImage] = useState(null);
+  const [noDealer, setNoDealer] = useState(false);
 
+  const [section, setSection] = useState("search");
 
-  const { register, handleSubmit, watch, setValue } = useForm({
+  const { register, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues: {
       productDetails: {},
       documentDetails: {},
       customerDetails: {},
       dealerDetails: {},
-      status: "Pending",
-      replacementDetails: {},
     },
   });
   const productDetails = watch("productDetails");
   const isStep1Completed = !!(
-    productDetails?.complaint_id &&
+    productDetails?.product_id &&
     productDetails?.serial_no &&
     productDetails?.purchaseDate
   );
+
   const documentDetails = watch("documentDetails");
   const isStep2Completed = !!(
     documentDetails?.documentName && documentDetails?.image
   );
+
   const customerDetails = watch("customerDetails");
-  const isStep3Completed = !!customerDetails?.customer_id;
+  const isStep3Completed = !!(
+    customerDetails?.customer_id ||
+    (customerDetails?.customer_name &&
+      customerDetails?.customer_contact &&
+      customerDetails?.customer_address)
+  );
+
+  const dealerDetails = watch("dealerDetails");
+  const isStep4Completed = !!(noDealer || dealerDetails?.dealer_id);
+
+  const fetchProducts = async () => {
+    const response = await window.electron.invoke("database-operation", {
+      action: "get-products",
+    });
+
+    if (response.success) {
+      setProducts(response.data);
+    } else {
+      setMessage(`Error: ${response.error}`);
+    }
+  };
+  const findCustomer = async (query) => {
+    const response = await window.electron.invoke("database-operation", {
+      action: "find-customers",
+      data: { query },
+    });
+
+    if (response.success) {
+      setCustomers(response.data);
+    } else {
+      setMessage(`Error: ${response.error}`);
+    }
+  };
+  const findDealer = async (query) => {
+    const response = await window.electron.invoke("database-operation", {
+      action: "find-dealers",
+      data: { query },
+    });
+
+    if (response.success) {
+      setDealers(response.data);
+    } else {
+      setMessage(`Error: ${response.error}`);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const stepsData = [
     {
@@ -56,64 +115,47 @@ function NewComplaintForm({ setIsOpenModal, fetchComplaints }) {
     {
       id: 2,
       icon: TbCircleNumber2Filled,
+      name: "Document Details",
       component: DocumentsDetails,
-      props: { register, setValue,image, setImage },
+      props: { register, setValue, image, setImage },
       isCompleted: isStep2Completed,
     },
     {
       id: 3,
       icon: TbCircleNumber3Filled,
+      name: "Customer Details",
       component: CustomersDetails,
-      props: { customers, register },
+      props: {
+        customers,
+        setCustomers,
+        selectedCustomer,
+        setSelectedCustomer,
+        section,
+        setSection,
+        setValue,
+        register,
+        findCustomer,
+      },
       isCompleted: isStep3Completed,
     },
     {
       id: 4,
       icon: TbCircleNumber4Filled,
-      component: () => <></>,
-      isCompleted: false,
-    },
-    {
-      id: 5,
-      icon: TbCircleNumber5Filled,
-      component: () => <></>,
-      isCompleted: false,
-    },
-    {
-      id: 6,
-      icon: TbCircleNumber6Filled,
-      component: () => <></>,
-      isCompleted: false,
+      name: "Dealer Details",
+      component: DealerDetails,
+      props: {
+        findDealer,
+        setValue,
+        selectedDealer,
+        setSelectedDealer,
+        noDealer,
+        setNoDealer,
+        dealers,
+        setDealers,
+      },
+      isCompleted: isStep4Completed,
     },
   ];
-
-  const fetchProducts = async () => {
-    const response = await window.electron.invoke("database-operation", {
-      action: "get-products",
-    });
-
-    if (response.success) {
-      setProducts(response.data);
-    } else {
-      setMessage(`Error: ${response.error}`);
-    }
-  };
-  const fetchCustomers = async () => {
-    const response = await window.electron.invoke("database-operation", {
-      action: "get-customers",
-    });
-
-    if (response.success) {
-      setCustomers(response.data);
-    } else {
-      setMessage(`Error: ${response.error}`);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-    fetchCustomers();
-  }, []);
 
   const handleNext = () => {
     if (currentStep < stepsData.length) {
@@ -126,7 +168,55 @@ function NewComplaintForm({ setIsOpenModal, fetchComplaints }) {
       setCurrentStep(currentStep - 1);
     }
   };
-  async function onSubmit(data) {}
+
+  async function onSubmit(data) {
+    const incompleteStep = stepsData.find((obj) => !obj.isCompleted);
+
+    if (incompleteStep) {
+      setCurrentStep(incompleteStep.id);
+      setMessage("Please Complete the step");
+      setTimeout(() => {
+        setMessage("");
+      }, 2500);
+      return;
+    }
+    const file = data.documentDetails.image;
+    const fileName = file.name;
+    const extension = fileName.split(".").pop().toLowerCase();
+
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+
+    reader.onload = async () => {
+      const buffer = new Uint8Array(reader.result);
+      const response = await window.electron.fileInvoke(
+        "database-file-operation",
+        "save-complaint",
+        {
+          product_id: data.productDetails.product_id,
+          serial_no: data.productDetails.serial_no,
+          purchaseDate: data.productDetails.purchaseDate,
+          documentName: data.documentDetails.documentName,
+          customer_id: data.customerDetails.customer_id || "",
+          customer_name: data.customerDetails.customer_name || "",
+          customer_contact: data.customerDetails.customer_contact || "",
+          customer_address: data.customerDetails.customer_address || "",
+          dealer_id: data.dealerDetails.dealer_id || "",
+          status: "Pending",
+          created_by: user.id,
+        },
+        buffer,
+        extension
+      );
+      if (response.success) {
+        reset();
+        fetchComplaints();
+        setIsOpenModal(false);
+      } else {
+        setMessage(response.message);
+      }
+    };
+  }
 
   const StepComponent = stepsData.find(
     (step) => step.id === currentStep
@@ -180,30 +270,28 @@ function NewComplaintForm({ setIsOpenModal, fetchComplaints }) {
           {StepComponent && <StepComponent {...StepProps} />}
           <hr className="w-full border-t border-rose-300 my-1" />
           <div className="w-full flex justify-between items-center font-semibold items-center">
-            <button
+            <div
               onClick={() => setIsOpenModal(false)}
-              className="py-1 px-3 rounded-lg border border-rose-500 text-rose-500 hover:text-rose-700"
+              className="py-1 cursor-pointer px-3 rounded-lg border border-rose-500 text-rose-500 hover:text-rose-700"
             >
               Cancel
-            </button>
+            </div>
             <div className="flex justify-between items-center gap-2">
               {currentStep > 1 && (
-                <button
-                  type="button"
+                <div
                   onClick={handlePrev}
                   className="text-pink-500 hover:text-pink-700 cursor-pointer"
                 >
                   <FaRegArrowAltCircleLeft className="size-8" />
-                </button>
+                </div>
               )}
               {currentStep < stepsData.length ? (
-                <button
-                  type="button"
+                <div
                   onClick={handleNext}
                   className="text-pink-500 hover:text-pink-700 cursor-pointer"
                 >
                   <FaRegArrowAltCircleRight className="size-8" />
-                </button>
+                </div>
               ) : (
                 <button
                   type="submit"
@@ -226,14 +314,14 @@ function PurchaseProductDetails({ products, register }) {
   return (
     <>
       <select
-        {...register("productDetails.complaint_id", {
+        {...register("productDetails.product_id", {
           required: true,
         })}
         className="p-2 w-1/2 bg-slate-300 rounded-lg focus:outline-none font-semibold focus:ring-2 focus:ring-gray-500"
       >
         <option value="">Select Product</option>
         {products.map((product) => (
-          <option key={product.id} value={product.id}>
+          <option key={product.model_name} value={product.id}>
             {product.companyName + " | " + product.model_name}
           </option>
         ))}
@@ -260,30 +348,26 @@ function PurchaseProductDetails({ products, register }) {
             required: true,
           })}
           className="p-2 w-full bg-slate-300 rounded-lg focus:outline-none font-semibold focus:ring-2 focus:ring-gray-500"
-          placeholder="Enter Serial No"
         />
       </div>
     </>
   );
 }
 
-function DocumentsDetails({ register, setValue,image, setImage }) {
-
-  // 📌 Handle File Selection (Click)
+function DocumentsDetails({ register, setValue, image, setImage }) {
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setImage(URL.createObjectURL(file)); // Create preview URL
+      setImage(URL.createObjectURL(file));
       setValue("documentDetails.image", file);
     }
   };
 
-  // 📌 Handle Drag & Drop
   const handleDrop = (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file) {
-      setImage(URL.createObjectURL(file)); // Create preview URL
+      setImage(URL.createObjectURL(file));
       setValue("documentDetails.image", file);
     }
   };
@@ -294,6 +378,7 @@ function DocumentsDetails({ register, setValue,image, setImage }) {
           <input
             type="radio"
             id="warrantyCard"
+            value="Warranty Card"
             {...register("documentDetails.documentName")}
             className="size-5"
           />
@@ -303,6 +388,7 @@ function DocumentsDetails({ register, setValue,image, setImage }) {
           <input
             type="radio"
             id="billAvailable"
+            value="Purchase Bill"
             {...register("documentDetails.documentName")}
             className="size-5"
           />
@@ -350,22 +436,278 @@ function DocumentsDetails({ register, setValue,image, setImage }) {
   );
 }
 
-function CustomersDetails({ customers, register }) {
+function CustomersDetails({
+  customers,
+  setCustomers,
+  setValue,
+  register,
+  selectedCustomer,
+  section,
+  setSection,
+  setSelectedCustomer,
+  findCustomer,
+}) {
+  const [openCustomerList, setOpenCustomerList] = useState(false);
+  const [query, setQuery] = useState("");
+
   return (
     <>
-      <select
-        {...register("customerDetails.customer_id", {
-          required: true,
-        })}
-        className="p-2 w-1/2 bg-slate-300 rounded-lg focus:outline-none font-semibold focus:ring-2 focus:ring-gray-500"
-      >
-        <option value="">Select Customer</option>
-        {customers.map((customer) => (
-          <option key={customer.id} value={customer.id}>
-            {customer.name + " | " + customer.contact}
-          </option>
-        ))}
-      </select>
+      <div className="flex gap-2">
+        <div
+          onClick={() => {
+            setSection("search");
+            setSelectedCustomer(null);
+            setValue("customerDetails", {});
+          }}
+          className={
+            "cursor-pointer font-semibold px-2 py-1 rounded-lg " +
+            (section === "search" ? "bg-rose-500 text-white" : "text-rose-500 ")
+          }
+        >
+          Search the customer
+        </div>
+        <div
+          onClick={() => {
+            setSection("new");
+            setSelectedCustomer(null);
+            setValue("customerDetails", {});
+          }}
+          className={
+            "cursor-pointer font-semibold px-2 py-1 rounded-lg " +
+            (section === "new" ? "bg-rose-500 text-white" : "text-rose-500 ")
+          }
+        >
+          Create new customer
+        </div>
+      </div>
+      {section === "search" ? (
+        selectedCustomer ? (
+          <div className="flex justify-center text-rose-500 items-center font-semibold gap-2">
+            {selectedCustomer.name + " | " + selectedCustomer.contact}
+            <IoMdRemoveCircle
+              onClick={() => {
+                setValue("customerDetails", {});
+                setSelectedCustomer(null);
+              }}
+              className="size-5 hover:text-rose-800"
+            />
+          </div>
+        ) : (
+          <div className="relative bottom-0 w-1/2">
+            <div className="flex justify-center gap-2 items-center">
+              <button
+                type="button"
+                onClick={() => setOpenCustomerList(!openCustomerList)}
+                className="rounded-lg bg-slate-300 p-2"
+              >
+                {openCustomerList ? (
+                  <IoIosArrowDropdown className="text-gray-900 size-5" />
+                ) : (
+                  <IoIosArrowDropright className="text-gray-900 size-5" />
+                )}
+              </button>
+              <input
+                type="text"
+                placeholder="Search with name, contact or address"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="p-2 w-full bg-slate-300 rounded-lg focus:outline-none font-semibold focus:ring-2 focus:ring-gray-500"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    findCustomer(query);
+                    setOpenCustomerList(true);
+                  }}
+                  className="rounded-lg bg-slate-300 p-2"
+                >
+                  <LuSearch className="text-gray-900 size-5" />
+                </button>
+              )}
+            </div>
+            {openCustomerList && (
+              <div className="absolutee z-30 my-2 rounded-lg w-full p-1 bg-slate-300 max-h-48 overflow-y-auto scrollbar-hide space-y-1">
+                {customers.length > 0 ? (
+                  <>
+                    {customers.map((customer) => (
+                      <div
+                        key={customer.id}
+                        onClick={() => {
+                          setValue("customerDetails.customer_id", customer.id);
+                          setOpenCustomerList(false);
+                          setSelectedCustomer(customer);
+                        }}
+                        className="font-semibold hover:bg-slate-100 cursor-pointer rounded-lg"
+                      >
+                        {customer.name + " | " + customer.contact}
+                      </div>
+                    ))}
+                    <div
+                      onClick={() => setCustomers([])}
+                      className="hover:underline underline-gray-900 text-gray-900 text-sm cursor-pointer"
+                    >
+                      Clear all
+                    </div>
+                  </>
+                ) : (
+                  <div className="font-semibold text-gray-900">
+                    No Customers
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      ) : (
+        <>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              {...register("customerDetails.customer_name", {
+                required: true,
+              })}
+              placeholder="Name"
+              required
+              className="bg-gray-50 p-1 rounded-lg font-semibold"
+            />
+            <input
+              type="number"
+              {...register("customerDetails.customer_contact", {
+                required: true,
+              })}
+              placeholder="Contact"
+              required
+              className="bg-gray-50 p-1 rounded-lg font-semibold"
+            />
+          </div>
+          <div className="flex justify-center gap-2 mt-2">
+            <input
+              type="text"
+              {...register("customerDetails.customer_address", {
+                required: true,
+              })}
+              placeholder="Address"
+              className="bg-gray-50 p-1 rounded-lg font-semibold"
+            />
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+function DealerDetails({
+  findDealer,
+  setValue,
+  selectedDealer,
+  setSelectedDealer,
+  dealers,
+  setDealers,
+  noDealer,
+  setNoDealer,
+}) {
+  const [openDealerList, setOpenDealerList] = useState(false);
+  const [queryDealer, setQueryDealer] = useState("");
+  useEffect(() => {
+    setOpenDealerList(true);
+  }, [dealers]);
+  return (
+    <>
+      <div className="flex jusity-center items-center gap-2">
+        <input
+          type="checkbox"
+          checked={noDealer}
+          onChange={(e) => {
+            setNoDealer(e.target.checked);
+            setValue("dealerDetails.dealer_id", "");
+            setOpenDealerList(false);
+            setSelectedDealer(null);
+          }}
+          className="size-5"
+          id="noDealer"
+        />
+        <label htmlFor="noDealer" className="font-semibold ">
+          No Dealer
+        </label>
+      </div>
+      <div className="w-full flex items-center justify-center gap-2 text-rose-300 font-semibold">
+        <hr className="border-t border-rose-300 w-2/5" />
+        <div>or</div>
+        <hr className="border-t border-rose-300 w-2/5" />
+      </div>
+      {selectedDealer ? (
+        <div className="flex justify-center text-rose-500 items-center font-semibold gap-2">
+          {selectedDealer.name + " | " + selectedDealer.contact}
+          <IoMdRemoveCircle
+            onClick={() => {
+              setValue("dealerDetails.dealer_id", "");
+              setSelectedDealer(null);
+            }}
+            className="size-5 hover:text-rose-800"
+          />
+        </div>
+      ) : (
+        <div className="relative bottom-0 w-1/2">
+          <div className="flex justify-center gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => setOpenDealerList(!openDealerList)}
+              className="rounded-lg bg-slate-300 p-2"
+            >
+              {openDealerList ? (
+                <IoIosArrowDropdown className="text-gray-900 size-5" />
+              ) : (
+                <IoIosArrowDropright className="text-gray-900 size-5" />
+              )}
+            </button>
+            <input
+              type="text"
+              placeholder="Search with name, contact or address"
+              value={queryDealer}
+              onChange={(e) => setQueryDealer(e.target.value)}
+              className="p-2 w-full bg-slate-300 rounded-lg focus:outline-none font-semibold focus:ring-2 focus:ring-gray-500"
+            />
+            <button
+              type="button"
+              onClick={() => findDealer(queryDealer)}
+              className="rounded-lg bg-slate-300 p-2"
+            >
+              <LuSearch className="text-gray-900 size-5" />
+            </button>
+          </div>
+          {openDealerList && (
+            <div className="absolutee z-30 my-2 rounded-lg w-full p-1 bg-slate-300 max-h-48 overflow-y-auto scrollbar-hide space-y-1">
+              {dealers.length > 0 ? (
+                <>
+                  {dealers.map((dealer) => (
+                    <div
+                      key={dealer.id}
+                      onClick={() => {
+                        setValue("dealerDetails.dealer_id", dealer.id);
+                        setNoDealer(false);
+                        setOpenDealerList(false);
+                        setSelectedDealer(dealer);
+                      }}
+                      className="font-semibold hover:bg-slate-100 cursor-pointer rounded-lg"
+                    >
+                      {dealer.name + " | " + dealer.contact}
+                    </div>
+                  ))}
+                  <div
+                    onClick={() => setDealers([])}
+                    className="hover:underline underline-gray-900 text-gray-900 text-sm cursor-pointer"
+                  >
+                    Clear all
+                  </div>
+                </>
+              ) : (
+                <div className="font-semibold text-gray-900">No Dealers</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }
