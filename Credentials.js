@@ -3,8 +3,8 @@ const SECRET_KEY = "JK-Battery";
 const DEFAULT_ADMIN = {
   id: 0,
   uid: "AD00000000",
-  username: "admin",
-  password: "admin123",
+  username: "jkbattery",
+  password: "JKBatteryPBH@2025",
   role: "admin",
 };
 
