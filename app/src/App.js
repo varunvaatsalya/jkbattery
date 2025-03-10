@@ -1,6 +1,6 @@
 // import logo from "./logo.svg";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./main/Login";
 import AdminDashboard from "./main/AdminDashboard";
 import UserDashboard from "./main/UserDashboard";
@@ -15,6 +15,7 @@ import Customers from "./pages/Customers";
 import Dealers from "./pages/Dealers";
 import LoginsHistory from "./pages/LoginsHistory";
 import MessageBox from "./components/MessageBox";
+import NotFound from "./NotFound";
 
 const ProtectedRoute = ({ element, isAllowed }) => {
   return isAllowed ? element : <Navigate to="/" replace />;
@@ -23,7 +24,7 @@ const ProtectedRoute = ({ element, isAllowed }) => {
 function App() {
   const { user } = useAuth();
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="max-h-screen min-h-screen bg-gray-100">
         <MessageBox />
         <Routes>
@@ -33,7 +34,7 @@ function App() {
             element={
               <ProtectedRoute
                 element={<AdminDashboard />}
-                isAllowed={user && user.username === "admin"}
+                isAllowed={user && user.role === "admin"}
               />
             }
           />
@@ -42,7 +43,7 @@ function App() {
             element={
               <ProtectedRoute
                 element={<Users />}
-                isAllowed={user && user.username === "admin"}
+                isAllowed={user && user.role === "admin"}
               />
             }
           />
@@ -51,16 +52,7 @@ function App() {
             element={
               <ProtectedRoute
                 element={<Employees />}
-                isAllowed={user && user.username === "admin"}
-              />
-            }
-          />
-          <Route
-            path="/adminDashboard/products"
-            element={
-              <ProtectedRoute
-                element={<Products />}
-                isAllowed={user && user.username === "admin"}
+                isAllowed={user && user.role === "admin"}
               />
             }
           />
@@ -69,43 +61,7 @@ function App() {
             element={
               <ProtectedRoute
                 element={<Dealers />}
-                isAllowed={user && user.username === "admin"}
-              />
-            }
-          />
-          <Route
-            path="/adminDashboard/customers"
-            element={
-              <ProtectedRoute
-                element={<Customers />}
-                isAllowed={user && user.username === "admin"}
-              />
-            }
-          />
-          <Route
-            path="/adminDashboard/products/addEditProducts"
-            element={
-              <ProtectedRoute
-                element={<AddEditProducts />}
-                isAllowed={user && user.username === "admin"}
-              />
-            }
-          />
-          <Route
-            path="/adminDashboard/products/company"
-            element={
-              <ProtectedRoute
-                element={<Company />}
-                isAllowed={user && user.username === "admin"}
-              />
-            }
-          />
-          <Route
-            path="/adminDashboard/complaints"
-            element={
-              <ProtectedRoute
-                element={<Complaints />}
-                isAllowed={user && user.username === "admin"}
+                isAllowed={user && user.role === "admin"}
               />
             }
           />
@@ -114,23 +70,32 @@ function App() {
             element={
               <ProtectedRoute
                 element={<LoginsHistory />}
-                isAllowed={user && user.username === "admin"}
+                isAllowed={user && user.role === "admin"}
               />
             }
           />
-
           <Route
             path="/userDashboard"
             element={
               <ProtectedRoute
                 element={<UserDashboard />}
-                isAllowed={user && user.username === "user"}
+                isAllowed={user && user.role === "user"}
               />
             }
           />
+
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/complaints" element={<Complaints />} />
+          <Route path="/products" element={<Products />} />
+          <Route
+            path="/products/addEditProducts"
+            element={<AddEditProducts />}
+          />
+          <Route path="/products/company" element={<Company />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

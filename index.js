@@ -80,6 +80,7 @@ app.whenReady().then(() => {
     height,
     minWidth: 1000,
     minHeight: 700,
+    icon: path.join(__dirname, "assets", "jkbattery.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -88,8 +89,8 @@ app.whenReady().then(() => {
   });
   Menu.setApplicationMenu(null);
   mainWindow.webContents.openDevTools();
-  // mainWindow.loadFile(path.join(__dirname, "./app/build/index.html"));
-  mainWindow.loadURL("http://localhost:3000/");
+  mainWindow.loadFile(path.join(__dirname, "app/build/index.html"));
+  // mainWindow.loadURL("http://localhost:3000/");
 });
 
 ipcMain.handle("database-operation", async (event, { action, data }) => {

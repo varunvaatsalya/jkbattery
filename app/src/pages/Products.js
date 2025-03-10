@@ -10,7 +10,7 @@ function Products() {
       name: "Add/Edit Products",
       description: "You can view, create & modify all the products here",
       icon: <HiOutlineViewGridAdd size={50} />,
-      link: "/adminDashboard/products/addEditProducts",
+      link: `/products/addEditProducts`,
       color: "bg-green-700",
     },
     {
@@ -18,7 +18,7 @@ function Products() {
       description:
         "You can view & create all the companies and there products here",
       icon: <BsBuildingFillAdd size={50} />,
-      link: "/adminDashboard/products/company",
+      link: `/products/company`,
       color: "bg-red-700",
     },
   ];

@@ -15,7 +15,7 @@ function AdminDashboard() {
       name: "Complaint",
       description: "You can view & create customer complaints here",
       icon: <IoNewspaper size={50} />,
-      link: "/adminDashboard/complaints",
+      link: "/complaints",
       color: "bg-emerald-700",
     },
     {
@@ -23,7 +23,7 @@ function AdminDashboard() {
       description:
         "You can view, create & modify all the customers and there previous order here",
       icon: <FaPeopleLine size={50} />,
-      link: "/adminDashboard/customers",
+      link: "/customers",
       color: "bg-rose-500",
     },
     {
@@ -31,7 +31,7 @@ function AdminDashboard() {
       description:
         "You can view, create & modify all the product and there meta data here",
       icon: <FaCarBattery size={50} />,
-      link: "/adminDashboard/products",
+      link: "/products",
       color: "bg-blue-700",
     },{
       name: "Dealers",

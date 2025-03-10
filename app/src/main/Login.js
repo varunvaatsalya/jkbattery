@@ -20,8 +20,6 @@ function Login() {
   const { user, setUser } = useAuth();
   const { setMessages } = useStateContext();
 
-  // useEffect(() => {}, [user]);
-
   async function onSubmit(data) {
     const result = await window.auth.login(data.username, data.password);
     if (result.success) {
@@ -90,7 +88,7 @@ function Login() {
               autoFocus
               placeholder="Username"
               {...register("username", { required: "Username is required" })}
-              className="w-full font-semibold p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:text-rose-600 transition duration-300 focus:scale-[1.02] focus:shadow-lg focus:scale-[1.02] "
+              className="w-full font-semibold p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:text-rose-600 transition duration-300 focus:scale-[1.02] focus:shadow-lg"
             />
           </div>
           <div className="mb-6">
