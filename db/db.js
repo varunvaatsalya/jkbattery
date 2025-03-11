@@ -4,6 +4,7 @@ const path = require("path");
 const sharp = require("sharp");
 const express = require("express");
 const archiver = require("archiver");
+const unzipper = require("unzipper");
 const app = express();
 
 const PORT = 3001;
@@ -14,9 +15,9 @@ const homeDir = process.env.HOME || process.env.USERPROFILE;
 // const uploadsFolder = path.join(__dirname, "uploads");
 
 const dbFolder = path.join(homeDir, "JkBatteryApp");
-const dbDataPath = path.join(dbFolder, "database.db");
-const dbPath = path.join(dbFolder, "data", "database.db");
-const uploadsFolder = path.join(dbFolder, "data", "uploads");
+const dbDataPath = path.join(dbFolder, "data");
+const dbPath = path.join(dbDataPath, "database.db");
+const uploadsFolder = path.join(dbDataPath, "uploads");
 
 if (!fs.existsSync(dbFolder)) {
   fs.mkdirSync(dbFolder, { recursive: true });
@@ -34,10 +35,50 @@ app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error("DB Connection Error:", err);
-  else console.log("Database Connected at", dbPath);
-});
+// const db = new sqlite3.Database(dbPath, (err) => {
+//   if (err) console.error("DB Connection Error:", err);
+//   else console.log("Database Connected at", dbPath);
+// });
+
+let db = null;
+
+function closeDatabase(callback) {
+  if (!db) {
+    console.log("Database is already closed.");
+    return callback(null);
+  }
+
+  db.close((err) => {
+    if (err) {
+      console.error("Error closing database:", err);
+      return callback(err);
+    }
+    console.log("Database closed successfully!");
+    db = null; // ⚡ Reset DB reference
+    callback(null);
+  });
+}
+
+function connectDatabase() {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      console.log("Database is already connected.");
+      return resolve(db);  // Agar pehle se open hai to dobara open na kare
+    }
+
+    db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error("Error connecting to database:", err);
+        return reject(err);
+      }
+      console.log("Database connected at", dbPath);
+      resolve(db);
+    });
+  });
+}
+
+
+connectDatabase();
 
 const saveFile = (fileBuffer, fileName, callback) => {
   if (!fileBuffer) {
@@ -77,9 +118,9 @@ const saveFile = (fileBuffer, fileName, callback) => {
     .catch((err) => callback(err, null));
 };
 
-function createZip(dbDataPath) {
+function createZip() {
   return new Promise((resolve, reject) => {
-    if (!fs.existsSync(dbDataPath)) {
+    if (!fs.existsSync(dbFolder)) {
       return resolve({ success: false, message: "Folder does not exist" });
     }
 
@@ -89,7 +130,7 @@ function createZip(dbDataPath) {
       .replace(/[-T:]/g, "_")
       .split(".")[0]; // YYYY_MM_DD_HH_MM_SS
     const zipFileName = `export_${timestamp}.zip`;
-    const zipFilePath = path.join(dbDataPath, zipFileName);
+    const zipFilePath = path.join(dbFolder, zipFileName);
 
     // Create write stream
     const output = fs.createWriteStream(zipFilePath);
@@ -111,55 +152,58 @@ function createZip(dbDataPath) {
   });
 }
 
-module.exports = { db, saveFile, dbFolder, createZip };
+async function importDatafromZip() {
+  try {
+    const files = fs.readdirSync(dbFolder)
+      .filter(file => file.endsWith(".zip"))
+      .map(file => ({ name: file, time: fs.statSync(path.join(dbFolder, file)).mtime }))
+      .sort((a, b) => b.time - a.time);
 
-// const sqlite3 = require("sqlite3").verbose();
-// const path = require("path");
-// const fs = require("fs");
+    if (files.length === 0) {
+      console.error("No ZIP files found!");
+      return { success: false, message: "No ZIP files found." };
+    }
 
-// // Get User's Home Directory
-// const homeDir = process.env.HOME || process.env.USERPROFILE;
+    const latestZip = path.join(dbFolder, files[0].name);
+    const dataFolder = path.join(dbFolder, "data");
 
-// // Define Folder & Database Path
-// const dbFolder = path.join(homeDir, "JkBattery");
-// const dbPath = path.join(dbFolder, "database.db");
-// const uploadsFolder = path.join(dbFolder, "uploads"); // Image Storage Folder
+    console.log("Closing Database before extraction...");
+    await new Promise((resolve) => closeDatabase(resolve));
 
-// // Check & Create Folders If Not Exists
-// if (!fs.existsSync(dbFolder)) {
-//     fs.mkdirSync(dbFolder, { recursive: true });
-//     console.log("Folder Created:", dbFolder);
-// }
+    if (fs.existsSync(dataFolder)) {
+      fs.rmSync(dataFolder, { recursive: true, force: true });
+      console.log("Old 'data' folder deleted.");
+    }
 
-// // Check & Create Uploads Folder
-// if (!fs.existsSync(uploadsFolder)) {
-//     fs.mkdirSync(uploadsFolder, { recursive: true });
-//     console.log("Uploads Folder Created:", uploadsFolder);
-// }
+    if (!fs.existsSync(dataFolder)) {
+      fs.mkdirSync(dataFolder, { recursive: true });
+    }
 
-// // Connect to Database
-// const db = new sqlite3.Database(dbPath, (err) => {
-//     if (err) console.error("DB Connection Error:", err);
-//     else console.log("Database Connected at", dbPath);
-// });
+    console.log("Extracting ZIP:", latestZip);
+    await fs.createReadStream(latestZip)
+      .pipe(unzipper.Extract({ path: dataFolder }))
+      .promise();
 
-// // Function to Save File
-// const saveFile = (file, callback) => {
-//     if (!file) {
-//         return callback(new Error("No file provided"), null);
-//     }
+      if (fs.existsSync(latestZip)) {
+        fs.unlinkSync(latestZip);
+        console.log("ZIP file deleted after extraction:", latestZip);
+      }
 
-//     const newFileName = `complaint_${Date.now()}_${file.name}`;
-//     const newPath = path.join(uploadsFolder, newFileName);
+    console.log("Data replaced successfully.");
+    return { success: true, message: "Data replaced successfully." };
 
-//     fs.copyFile(file.path, newPath, (err) => {
-//         if (err) {
-//             return callback(err, null);
-//         }
-//         console.log("File Saved at:", newPath);
-//         callback(null, newPath);
-//     });
-// };
+  } catch (error) {
+    console.error("Error:", error);
+    
+    // **If extraction failed, delete the ZIP file**
+    if (fs.existsSync(latestZip)) {
+      fs.unlinkSync(latestZip);
+      console.log("Invalid ZIP file deleted due to error:", latestZip);
+    }
 
-// // Export Database & Save File Function
-// module.exports = { db, saveFile };
+    return { success: false, message: error.message };
+  }
+}
+
+
+module.exports = { db, saveFile, dbFolder, createZip, importDatafromZip };

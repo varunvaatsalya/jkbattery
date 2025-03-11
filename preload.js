@@ -22,8 +22,7 @@ contextBridge.exposeInMainWorld("auth", {
 });
 
 contextBridge.exposeInMainWorld("db", {
-  login: (username, password) =>
-    ipcRenderer.invoke("login", { username, password }),
+  import: () => ipcRenderer.invoke("import-data-from-file"),
   export: () => ipcRenderer.invoke("create-export-file"),
   open: () => ipcRenderer.invoke("fileOpen"),
 });

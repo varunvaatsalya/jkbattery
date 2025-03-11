@@ -4,7 +4,7 @@ const DEFAULT_ADMIN = {
   id: 0,
   uid: "AD00000000",
   username: "jkbattery",
-  password: "JKBatteryPBH@2025",
+  password: "JKBatteryPBH2025",
   role: "admin",
 };
 

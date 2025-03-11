@@ -1,8 +1,20 @@
-const { app, BrowserWindow, ipcMain, Menu, screen, shell } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  screen,
+  shell,
+} = require("electron");
 const path = require("path");
 const { handlers } = require("./handlers.js");
 const { loginUser, isUserLoggedIn, logoutUser } = require("./db/auth.js");
-const { openDb, dbFolder, createZip } = require("./db/db.js");
+const {
+  openDb,
+  dbFolder,
+  createZip,
+  importDatafromZip,
+} = require("./db/db.js");
 
 let mainWindow;
 
@@ -21,14 +33,13 @@ app.whenReady().then(() => {
     },
   });
   Menu.setApplicationMenu(null);
-  mainWindow.webContents.openDevTools();
-  // mainWindow.loadFile(path.join(__dirname, "app/build/index.html"));
-  mainWindow.loadURL("http://localhost:3000/");
+  // mainWindow.webContents.openDevTools();
+  mainWindow.loadFile(path.join(__dirname, "app/build/index.html"));
+  // mainWindow.loadURL("http://localhost:3000/");
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show(); // Show window only after content is loaded
   });
-
 });
 
 ipcMain.handle("database-operation", async (event, { action, data }) => {
@@ -78,6 +89,15 @@ ipcMain.handle("fileOpen", () => {
 });
 ipcMain.handle("create-export-file", () => {
   return createZip();
+});
+ipcMain.handle("import-data-from-file", async () => {
+  let result = await importDatafromZip();
+  if (result.success) {
+    app.relaunch();
+    app.exit(0);
+  }
+
+  return result;
 });
 
 app.on("window-all-closed", () => {

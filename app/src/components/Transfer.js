@@ -16,13 +16,21 @@ function Transfer() {
       ...msgs,
     ]);
   }
+  async function ImportFile() {
+    let result = await window.db.import();
+    console.log(result);
+    setMessages((msgs) => [
+      { id: Date.now(), text: result.message, success: result.success },
+      ...msgs,
+    ]);
+  }
   return (
     <div className="flex flex-col items-center max-h-screen h-screen">
       <Navbar route={["Data Transfer"]} />
       <div className="flex-1 w-full overflow-y-auto scrollbar-hide flex flex-wrap justify-center items-center gap-8 p-6">
         <div
           onClick={createExportFile}
-          className="bg-green-700 w-full p-3 h-60 md:w-2/5 lg:w-1/5 text-white rounded-xl flex flex-col justify-center items-center space-y-1 hover:scale-105"
+          className="bg-green-700 w-full p-3 h-60 md:w-2/5 lg:w-1/5 text-white rounded-xl flex flex-col justify-center items-center cursor-pointer space-y-1 hover:scale-105"
         >
           <FaFileExport size={50} />
           <div className="font-bold text-xl">Export</div>
@@ -30,7 +38,7 @@ function Transfer() {
             You can export all the latest data to the user here
           </div>
         </div>
-        <div className="bg-indigo-700 w-full p-3 h-60 md:w-2/5 lg:w-1/5 text-white rounded-xl flex flex-col justify-center items-center space-y-1 hover:scale-105">
+        <div onClick={ImportFile} className="bg-indigo-700 w-full p-3 h-60 md:w-2/5 lg:w-1/5 text-white rounded-xl flex flex-col justify-center items-center cursor-pointer space-y-1 hover:scale-105">
           <FaFileImport size={50} />
           <div className="font-bold text-xl">Import</div>
           <div className="text-center">
