@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, screen, shell } = require("electron");
 const path = require("path");
 const { handlers } = require("./handlers.js");
 const { loginUser, isUserLoggedIn, logoutUser } = require("./db/auth.js");
+const { openDb, dbFolder, createZip } = require("./db/db.js");
 
 let mainWindow;
 
@@ -20,17 +21,12 @@ app.whenReady().then(() => {
     },
   });
   Menu.setApplicationMenu(null);
-  // mainWindow.webContents.openDevTools();
-  mainWindow.loadFile(path.join(__dirname, "app/build/index.html"));
-  // mainWindow.loadURL("http://localhost:3000/");
+  mainWindow.webContents.openDevTools();
+  // mainWindow.loadFile(path.join(__dirname, "app/build/index.html"));
+  mainWindow.loadURL("http://localhost:3000/");
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show(); // Show window only after content is loaded
-  });
-
-  mainWindow.on("close", (event) => {
-    event.preventDefault();
-    mainWindow.hide(); // Prevent accidental closing
   });
 
 });
@@ -74,6 +70,14 @@ ipcMain.handle("check-login", () => {
 ipcMain.handle("logout", () => {
   logoutUser();
   return { success: true };
+});
+
+ipcMain.handle("fileOpen", () => {
+  shell.openPath(dbFolder);
+  return { success: true };
+});
+ipcMain.handle("create-export-file", () => {
+  return createZip();
 });
 
 app.on("window-all-closed", () => {

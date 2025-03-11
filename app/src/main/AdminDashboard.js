@@ -2,7 +2,7 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
 import { IoLogOut, IoNewspaper } from "react-icons/io5";
-import { FaCarBattery, FaPeopleLine, FaUsersGear } from "react-icons/fa6";
+import { FaCarBattery, FaFileZipper, FaPeopleLine, FaUsersGear } from "react-icons/fa6";
 import { GrUserWorker } from "react-icons/gr";
 import { SiSimplelogin } from "react-icons/si";
 import { BsPersonFillUp } from "react-icons/bs";
@@ -54,6 +54,13 @@ function AdminDashboard() {
       icon: <FaUsersGear size={50} />,
       link: "/adminDashboard/users",
       color: "bg-yellow-700",
+    },
+    {
+      name: "Data Transfer",
+      description: "You can view & Transfer all the Data here",
+      icon: <FaFileZipper size={50} />,
+      link: "/transfer",
+      color: "bg-slate-700",
     },
     {
       name: "Logins",

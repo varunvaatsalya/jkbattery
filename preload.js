@@ -20,3 +20,10 @@ contextBridge.exposeInMainWorld("auth", {
   checkLogin: () => ipcRenderer.invoke("check-login"),
   logout: () => ipcRenderer.invoke("logout"),
 });
+
+contextBridge.exposeInMainWorld("db", {
+  login: (username, password) =>
+    ipcRenderer.invoke("login", { username, password }),
+  export: () => ipcRenderer.invoke("create-export-file"),
+  open: () => ipcRenderer.invoke("fileOpen"),
+});

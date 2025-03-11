@@ -23,9 +23,10 @@ function MessageBox() {
       {messages.map((msg) => (
         <div
           key={msg.id}
-          className={`flex items-center shadow-lg gap-2 bg-${
-            msg.success ? "green" : "red"
-          }-500 p-2 font-semibold rounded-lg`}
+          className={
+            "flex items-center shadow-lg gap-2 p-2 font-semibold rounded-lg " +
+            (msg.success ? "bg-green-500" : "bg-red-500")
+          }
         >
           <div>{msg.text}</div>
           <RxCrossCircled
@@ -41,6 +42,5 @@ function MessageBox() {
     </div>
   );
 }
-
 
 export default MessageBox;

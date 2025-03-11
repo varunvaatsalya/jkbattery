@@ -16,6 +16,7 @@ import Dealers from "./pages/Dealers";
 import LoginsHistory from "./pages/LoginsHistory";
 import MessageBox from "./components/MessageBox";
 import NotFound from "./NotFound";
+import Transfer from "./components/Transfer";
 
 const ProtectedRoute = ({ element, isAllowed }) => {
   return isAllowed ? element : <Navigate to="/" replace />;
@@ -87,6 +88,9 @@ function App() {
           <Route path="/customers" element={<Customers />} />
           <Route path="/complaints" element={<Complaints />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/transfer" element={<Transfer />} />
+          <Route path="/transfer/export" element={<Transfer />} />
+          <Route path="/transfer/import" element={<Transfer />} />
           <Route
             path="/products/addEditProducts"
             element={<AddEditProducts />}

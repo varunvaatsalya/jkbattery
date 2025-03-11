@@ -2,30 +2,37 @@
   "name": "jkbattery",
   "version": "1.0.0",
   "main": "index.js",
-  "homepage": "./",
+  "author": "Varun Gupta",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd app && npm run build",
-    "dist": "npm run build && electron-builder"
+    "build": "electron-builder"
   },
   "build": {
-    "appId": "com.jkbattery.app",
+    "appId": "com.jkbattery",
     "productName": "JK Battery",
-    "win": {
-      "icon": "assets/jkbattery.ico"
+    "directories": {
+      "app": "."
     },
-    "mac": {
-      "icon": "assets/jkbattery.icns"
+    "extends": null,
+    "files": [
+      "index.js",
+      "app/build/**/*",
+      "preload.js",
+      "handlers.js",
+      "Credentials.js",
+      "package.json",
+      "utils/**/*",
+      "db/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/jkbattery.ico"
     }
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
+    "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
-    "electron": "^33.3.1",
     "electron-store": "^8.2.0",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
@@ -33,6 +40,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "electron": "^33.3.1",
     "electron-builder": "^25.1.8"
   }
 }

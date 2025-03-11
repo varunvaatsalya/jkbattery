@@ -89,7 +89,7 @@ function Complaints() {
           type="text"
           placeholder="Search Complaints..."
           onChange={(e)=>{searchComplaints(e.target.value)}}
-          className="w-1/2 rounded-full py-1 px-3 bg-rose-200 shadow-md focus:outline-none focus:ring ring-rose-600 text-rose-600 font-semibold"
+          className="w-1/2 rounded-full py-1 px-3 bg-rose-200 shadow-md focus:outline-none focus:ring-1 ring-rose-600 text-rose-600 font-semibold"
         />
         <button
           onClick={() => setIsOpenModal(true)}
@@ -515,7 +515,7 @@ function Complaints() {
             </div>
           ) : (
             <div className="w-full h-full text-gray-300 flex flex-col justify-center items-center gap-2">
-              <IoDocumentAttachOutline className="size-30" />
+              <IoDocumentAttachOutline className="size-28" />
               <div className="font-bold text-2xl ">Select the Complaint</div>
             </div>
           )}
